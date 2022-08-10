@@ -1,0 +1,10 @@
+name: 'DebugKeeper'
+version: '${version}'
+main: 'com.baioretto.debugkeeper.DebugKeeper'
+api-version: '1.18'
+prefix: 'DebugKeeper'
+description: 'A plugin that helps you debugging with intellij without time-out exception'
+
+commands:
+  test:
+    description: test
