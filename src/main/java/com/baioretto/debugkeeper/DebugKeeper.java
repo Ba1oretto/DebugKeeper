@@ -1,7 +1,9 @@
 package com.baioretto.debugkeeper;
 
+import com.baioretto.debugkeeper.core.PlayerDuplexAdaptor;
+import com.baioretto.debugkeeper.listener.GameListener;
 import com.baioretto.debugkeeper.listener.PlayerListener;
-import com.baioretto.debugkeeper.updater.KeepAliveUpdater;
+import com.baioretto.debugkeeper.core.KeepAliveUpdater;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.Bukkit;
@@ -25,6 +27,7 @@ public class DebugKeeper extends JavaPlugin {
     public void onEnable() {
         if (enable) {
             Bukkit.getPluginManager().registerEvents(new PlayerListener(), this);
+            Bukkit.getPluginManager().registerEvents(new GameListener(), this);
             KeepAliveUpdater.doStart();
         }
     }
@@ -32,6 +35,7 @@ public class DebugKeeper extends JavaPlugin {
     @Override
     public void onDisable() {
         if (enable) {
+            PlayerDuplexAdaptor.unregisterAll();
             KeepAliveUpdater.doStop();
         }
     }

@@ -1,7 +1,5 @@
 @file:Suppress("VulnerableLibrariesLocal")
 
-import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
-
 plugins {
     id("java")
     id("com.github.johnrengelman.shadow").version("7.1.2")
@@ -9,7 +7,7 @@ plugins {
 }
 
 group = "com.baioretto"
-version = "1.0.0-SNAPSHOT"
+version = "1.1.0-SNAPSHOT"
 val minecraftVersion = "1.18.2-R0.1-SNAPSHOT"
 val kyoriVersion = "4.11.0"
 
@@ -74,28 +72,25 @@ val normalJarName = "${project.name}-${version}.jar"
 val normalJarPath = File(project.buildDir, "libs/${normalJarName}")
 val obfuscatedJarName = "${project.name}-${version}-obf.jar"
 val obfuscatedJarPath = File(project.buildDir, "libs/${obfuscatedJarName}")
+val shadowJar by tasks.existing(com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar::class)
 
-val shadowJar by tasks.existing(ShadowJar::class)
-
-tasks.register<com.baioretto.specialsource.task.MojangMappingToMojangObfuscated>("mmtmo") {
+val mmtmo = task("mmtmo", com.baioretto.specialsource.task.MojangMappingToMojangObfuscated::class) {
     group = "specialsource"
 
     mustRunAfter(shadowJar)
     minecraftVersion.set(mcversion)
     input.set(normalJarPath)
 }
-val mmtmo by tasks.existing(com.baioretto.specialsource.task.MojangMappingToMojangObfuscated::class)
 
-tasks.register<com.baioretto.specialsource.task.MojangObfuscatedToSpigotObfuscated>("motso") {
+val motso = task("motso", com.baioretto.specialsource.task.MojangObfuscatedToSpigotObfuscated::class) {
     group = "specialsource"
 
     mustRunAfter(mmtmo)
     minecraftVersion.set(mcversion)
     input.set(obfuscatedJarPath)
 }
-val motso by tasks.existing(com.baioretto.specialsource.task.MojangObfuscatedToSpigotObfuscated::class)
 
-tasks.register("copyJar", Copy::class) {
+val copyJar = task("copyJar", Copy::class) {
     group = "specialsource"
 
     from(normalJarPath)
@@ -107,7 +102,6 @@ tasks.register("copyJar", Copy::class) {
 
     mustRunAfter(motso)
 }
-val copyJar by tasks.existing(Copy::class)
 
 tasks.register("compile") {
     group = "specialsource"
