@@ -38,23 +38,21 @@ public final class KeepAliveUpdater extends TimerTask {
         // we don't run below if state not match RUNNABLE
         if (!Thread.State.RUNNABLE.equals(DebugKeeper.mainThread.getState())) {
             if (isDebugging) isDebugging = false;
+            if (getWatchdogIsStopping()) {
+                setWatchdogIsStopping(false);
+                WatchdogThread.doStart(SpigotConfig.timeoutTime, SpigotConfig.restartOnCrash);
+            }
             return;
         }
 
         // current time - 1s > the latest update time, represent interval more than 1s
         if (currentTimeMillis() - 1100L > timer.get()) {
             resetCounter();
-            if (getWatchdogIsStopping()) {
-                setWatchdogIsStopping(false);
-                WatchdogThread.doStart(SpigotConfig.timeoutTime, SpigotConfig.restartOnCrash);
-            }
         }
         synchronousTimer();
 
-        // vary close
-        if (counter.get() > 10) {
+        if (counter.get() >= DebugKeeper.earlyWarningEvery) {
             if (!getWatchdogIsStopping()) {
-                setWatchdogIsStopping(true);
                 WatchdogThread.doStop();
             }
         }
@@ -92,17 +90,22 @@ public final class KeepAliveUpdater extends TimerTask {
         return getWatchdogInstance() != null && Boolean.parseBoolean(Reflections.get(WATCHDOG_STOPPING_FIELD, getWatchdogInstance()).toString());
     }
 
+    @SuppressWarnings("SameParameterValue")
     private void setWatchdogIsStopping(boolean flag) {
         if (getWatchdogInstance() == null) return;
         Reflections.set(WATCHDOG_STOPPING_FIELD, getWatchdogInstance(), flag);
     }
 
     private Object getWatchdogInstance() {
-        return Reflections.get(WATCHDOG_INSTANCE_FIELD, null);
+        if (WATCHDOG_INSTANCE == null) synchronized (KeepAliveUpdater.class) {
+            if (WATCHDOG_INSTANCE == null) WATCHDOG_INSTANCE = Reflections.get(WATCHDOG_INSTANCE_FIELD, null);
+        }
+        return WATCHDOG_INSTANCE;
     }
 
     private final static Timer TASK_SCHEDULER = new Timer();
     private final static KeepAliveUpdater instance = new KeepAliveUpdater();
+    private static volatile Object WATCHDOG_INSTANCE;
     private final static Field WATCHDOG_STOPPING_FIELD = Reflections.getField(WatchdogThread.class, "stopping");
     private final static Field WATCHDOG_INSTANCE_FIELD = Reflections.getField(WatchdogThread.class, "instance");
 

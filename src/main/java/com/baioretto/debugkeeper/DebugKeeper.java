@@ -17,6 +17,7 @@ public class DebugKeeper extends JavaPlugin {
     public static Thread mainThread;
     public final static boolean enable = Boolean.getBoolean("debugkeeper.enable");
     public final static boolean log = Boolean.getBoolean("debugkeeper.log");
+    public final static int earlyWarningEvery = Integer.getInteger("debugkeeper.dowarning", 10);
 
     @Override
     public void onLoad() {
