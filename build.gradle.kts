@@ -7,7 +7,7 @@ plugins {
 }
 
 group = "com.baioretto"
-version = "1.1.0-SNAPSHOT"
+version = "1.1.1-SNAPSHOT"
 val minecraftVersion = "1.18.2-R0.1-SNAPSHOT"
 val kyoriVersion = "4.11.0"
 

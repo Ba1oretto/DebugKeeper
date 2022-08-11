@@ -15,8 +15,8 @@ import static net.kyori.adventure.text.format.NamedTextColor.*;
 @SuppressWarnings("unused")
 public class DebugKeeper extends JavaPlugin {
     public static Thread mainThread;
-    public final static boolean enable = Boolean.getBoolean("debughelper.enable");
-    public final static boolean log = Boolean.getBoolean("debughelper.log");
+    public final static boolean enable = Boolean.getBoolean("debugkeeper.enable");
+    public final static boolean log = Boolean.getBoolean("debugkeeper.log");
 
     @Override
     public void onLoad() {
