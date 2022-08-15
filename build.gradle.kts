@@ -3,12 +3,10 @@
 plugins {
     id("java")
     id("com.github.johnrengelman.shadow").version("7.1.2")
-    id("com.baioretto.specialsource").version("1.0.0")
 }
 
 group = "com.baioretto"
-version = "1.2.0-SNAPSHOT"
-val minecraftVersion = "1.18.2-R0.1-SNAPSHOT"
+version = "1.3.0-SNAPSHOT"
 val kyoriVersion = "4.11.0"
 
 repositories {
@@ -17,7 +15,7 @@ repositories {
 }
 
 dependencies {
-    compileOnly("org.spigotmc:spigot:${minecraftVersion}:remapped-mojang") // maven local
+    compileOnly("org.spigotmc:spigot:1.18.2-R0.1-SNAPSHOT") // maven local
 
     implementation("net.kyori:adventure-api:${kyoriVersion}") // maven central
     implementation("net.kyori:adventure-text-serializer-legacy:${kyoriVersion}") // maven central
@@ -67,47 +65,76 @@ tasks.shadowJar {
     archiveExtension.set("jar")
 }
 
-val mcversion = "1.18.2-R0.1-SNAPSHOT"
-val normalJarName = "${project.name}-${version}.jar"
-val normalJarPath = File(project.buildDir, "libs/${normalJarName}")
-val obfuscatedJarName = "${project.name}-${version}-obf.jar"
-val obfuscatedJarPath = File(project.buildDir, "libs/${obfuscatedJarName}")
-val shadowJar by tasks.existing(com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar::class)
+val shadowJar = tasks.getByName("shadowJar")
 
-val mmtmo = task("mmtmo", com.baioretto.specialsource.task.MojangMappingToMojangObfuscated::class) {
-    group = "specialsource"
-
+val copyJar = task<MultiCopy>("copyJar") {
     mustRunAfter(shadowJar)
-    minecraftVersion.set(mcversion)
-    input.set(normalJarPath)
-}
-
-val motso = task("motso", com.baioretto.specialsource.task.MojangObfuscatedToSpigotObfuscated::class) {
-    group = "specialsource"
-
-    mustRunAfter(mmtmo)
-    minecraftVersion.set(mcversion)
-    input.set(obfuscatedJarPath)
-}
-
-val copyJar = task("copyJar", Copy::class) {
-    group = "specialsource"
-
-    from(normalJarPath)
-    findProperty("server.plugin.folder")?.let { into(it) }
-
-    rename {
-        "${project.name}.jar"
-    }
-
-    mustRunAfter(motso)
+    group = "debugkeeper"
+    from(layout.buildDirectory.dir("libs/${rootProject.name}-${rootProject.version}.jar").get().asFile)
+    (findProperty("server.plugin.folder") as String?)?.let(::destDir)
+    separator("|")
+    rename(".*(.jar)", "${rootProject.name}$1")
 }
 
 tasks.register("compile") {
-    group = "specialsource"
-
+    group = "debugkeeper"
     dependsOn(shadowJar)
-    dependsOn(mmtmo)
-    dependsOn(motso)
     dependsOn(copyJar)
+}
+
+abstract class MultiCopy : Copy() {
+    private lateinit var destinationDirectories: String
+
+    private lateinit var directorySeparator: String
+
+    private fun createCopyActions(): Array<org.gradle.api.internal.file.copy.CopyAction> {
+        if (!::destinationDirectories.isInitialized) return arrayOf()
+
+        val destDirList = destinationDirectories.split(if (::directorySeparator.isInitialized) directorySeparator else "|")
+
+        if (destDirList.isEmpty()) {
+            return arrayOf(
+                org.gradle.api.internal.file.copy.FileCopyAction(
+                    fileLookup.getFileResolver(
+                        File(
+                            destinationDirectories
+                        )
+                    )
+                )
+            )
+        }
+
+        val fileCopyActions = mutableListOf<org.gradle.api.internal.file.copy.FileCopyAction>()
+        destDirList.forEach { dir ->
+            fileCopyActions.add(org.gradle.api.internal.file.copy.FileCopyAction(fileLookup.getFileResolver(File(dir))))
+        }
+        return fileCopyActions.toTypedArray()
+    }
+
+    fun destDir(destinationDirectories: String): MultiCopy {
+        this.destinationDirectories = destinationDirectories
+        return this
+    }
+
+    fun separator(directorySeparator: String): MultiCopy {
+        this.directorySeparator = directorySeparator
+        return this
+    }
+
+    @TaskAction
+    override fun copy() {
+        val copyActionExecutor = createCopyActionExecuter()
+        val copyActions = createCopyActions()
+        var didWork = true
+        copyActions.forEach { action ->
+            if (!copyActionExecutor.execute(rootSpec, action).didWork) didWork = false
+        }
+        setDidWork(didWork)
+    }
+
+    @OutputDirectory
+    @Optional
+    override fun getDestinationDir(): File {
+        return File("")
+    }
 }

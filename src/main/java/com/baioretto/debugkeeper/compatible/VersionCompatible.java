@@ -1,7 +1,7 @@
 package com.baioretto.debugkeeper.compatible;
 
 import com.baioretto.debugkeeper.util.Reflections;
-import net.minecraft.SharedConstants;
+import org.bukkit.Bukkit;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.HashMap;
@@ -23,11 +23,12 @@ public class VersionCompatible {
     public final static SupportVersion version;
 
     static {
-        String rawVersion = 'v' + SharedConstants.getCurrentVersion().getName().replaceAll("[.]", "_");
-        var position = rawVersion.lastIndexOf("_") + 1;
-        if (rawVersion.split("_").length == 3)
-            version = SupportVersion.getByName(rawVersion.substring(0, position) + 'R' + rawVersion.substring(position));
-        else version = SupportVersion.getByName(rawVersion);
+        String uselessVersion = 'v' + Bukkit.getVersion().split(" ")[2];
+        uselessVersion = uselessVersion.substring(0, uselessVersion.length() - 1).replaceAll("[.]", "_");
+        int position = uselessVersion.lastIndexOf("_") + 1;
+        if (uselessVersion.split("_").length == 3)
+            version = SupportVersion.getByName(uselessVersion.substring(0, position) + 'R' + uselessVersion.substring(position));
+        else version = SupportVersion.getByName(uselessVersion);
     }
 
     public enum SupportVersion {

@@ -17,13 +17,13 @@ public final class PlayerDuplexAdaptor {
 
     public static void registerAll() {
         var onlinePlayers = Bukkit.getServer().getOnlinePlayers();
-        if (DebugKeeper.log) DebugKeeper.sendConsoleMessage(Component.text("Attempt to register the packet handler to player: ", NamedTextColor.YELLOW).append(Component.text(generateMessage(onlinePlayers), NamedTextColor.GREEN)));
+        if (DebugKeeper.log && !onlinePlayers.isEmpty()) DebugKeeper.sendConsoleMessage(Component.text("Attempt to register the packet handler to player: ", NamedTextColor.YELLOW).append(Component.text(generateMessage(onlinePlayers), NamedTextColor.GREEN)));
         onlinePlayers.forEach(PlayerDuplexAdaptor::register);
     }
 
     public static void unregisterAll() {
         var onlinePlayers = Bukkit.getServer().getOnlinePlayers();
-        if (DebugKeeper.log) DebugKeeper.sendConsoleMessage(Component.text("Attempt to unregister the packet handler to player: ", NamedTextColor.YELLOW).append(Component.text(generateMessage(onlinePlayers), NamedTextColor.GREEN)));
+        if (DebugKeeper.log && !onlinePlayers.isEmpty()) DebugKeeper.sendConsoleMessage(Component.text("Attempt to unregister the packet handler to player: ", NamedTextColor.YELLOW).append(Component.text(generateMessage(onlinePlayers), NamedTextColor.GREEN)));
         onlinePlayers.forEach(PlayerDuplexAdaptor::unregister);
     }
 
